@@ -152,6 +152,7 @@
     const staffTop = 40;
     const staffLeft = 40;
     const staffWidth = 200;
+    const labelOffset = 24;
 
     function createSVGElement(tag, attributes = {}) {
       const element = document.createElementNS("http://www.w3.org/2000/svg", tag);
@@ -182,8 +183,9 @@
 
     function renderNotes(svg, config) {
       const noteX = staffLeft + 110;
+      const labelX = staffLeft + staffWidth + labelOffset;
 
-      config.notes.forEach((note, index) => {
+      config.notes.forEach((note) => {
         const y = stepToY(note.step);
         const head = createSVGElement("ellipse", {
           cx: noteX,
@@ -194,13 +196,12 @@
         });
         svg.appendChild(head);
 
-        const isRightSide = index % 2 === 0;
         const label = createSVGElement("text", {
-          x: isRightSide ? noteX + 26 : noteX - 26,
+          x: labelX,
           y: y + 4,
           "font-size": "12",
           fill: "#1f2937",
-          "text-anchor": isRightSide ? "start" : "end"
+          "text-anchor": "start"
         });
         label.textContent = `${note.name} / ${note.label}`;
         svg.appendChild(label);
