@@ -183,7 +183,8 @@
 
     function renderNotes(svg, config) {
       const noteX = staffLeft + 110;
-      const labelX = staffLeft + staffWidth + labelOffset;
+      const labelXRight = staffLeft + staffWidth + labelOffset;
+      const labelXLeft = staffLeft - labelOffset;
 
       config.notes.forEach((note) => {
         const y = stepToY(note.step);
@@ -196,12 +197,14 @@
         });
         svg.appendChild(head);
 
+        const isLineNote = note.step % 2 === 0;
+        const labelX = isLineNote ? labelXLeft : noteX + 18;
         const label = createSVGElement("text", {
           x: labelX,
           y: y + 4,
           "font-size": "12",
           fill: "#1f2937",
-          "text-anchor": "start"
+          "text-anchor": isLineNote ? "end" : "start"
         });
         label.textContent = `${note.name} / ${note.label}`;
         svg.appendChild(label);
