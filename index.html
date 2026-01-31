@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>悲愴ソナタ 第2楽章 音名クイズ</title>
+  <style>
+    :root {
+      font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      color: #1f2937;
+      background: #f8fafc;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 880px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+    }
+
+    h1 {
+      font-size: 24px;
+      margin: 0 0 12px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #475569;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .score-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .staff-panel {
+      padding: 16px;
+      background: #f1f5f9;
+      border-radius: 12px;
+    }
+
+    .question-meta {
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .label {
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .value {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button {
+      padding: 12px 10px;
+      border-radius: 10px;
+      border: 1px solid #cbd5f5;
+      background: #ffffff;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    button:hover:enabled {
+      background: #eff6ff;
+      border-color: #93c5fd;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .status {
+      margin-top: 16px;
+      font-weight: 600;
+      min-height: 24px;
+    }
+
+    .status.correct {
+      color: #15803d;
+    }
+
+    .status.incorrect {
+      color: #b91c1c;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 12px;
+    }
+
+    .next-button {
+      background: #1d4ed8;
+      color: #ffffff;
+      border-color: transparent;
+      padding: 10px 16px;
+    }
+
+    .next-button:hover:enabled {
+      background: #1e40af;
+    }
+
+    .note-info {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    @media (max-width: 720px) {
+      .score-card {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>悲愴ソナタ 第2楽章 音名クイズ</h1>
+    <p class="subtitle">
+      五線譜に表示された単音の音名を答えてください。調号は変イ長調（♭×4）を前提とし、
+      臨時記号がある場合は譜面表記どおりに判定します（同音異名は不正解）。
+    </p>
+
+    <section class="score-card">
+      <div class="staff-panel">
+        <svg id="staff" width="100%" height="180" viewBox="0 0 360 180" aria-label="五線譜" role="img"></svg>
+      </div>
+      <div class="question-meta">
+        <div>
+          <div class="label">現在の問題</div>
+          <div class="value" id="question-index">—</div>
+        </div>
+        <div>
+          <div class="label">ヒント</div>
+          <div class="value" id="clef-label">—</div>
+          <div class="note-info">※ オクターブは判定に含まれません。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="buttons" id="answer-buttons"></section>
+
+    <div class="status" id="status"></div>
+
+    <div class="actions">
+      <button class="next-button" id="next-button">次の問題</button>
+    </div>
+  </main>
+
+  <script>
+    const NOTE_POOL = [
+      { spelled: "C", label: "ド / C", accidental: "" },
+      { spelled: "D♭", label: "レ♭ / D♭", accidental: "♭" },
+      { spelled: "E♭", label: "ミ♭ / E♭", accidental: "♭" },
+      { spelled: "E♮", label: "ミ♮ / E♮", accidental: "♮" },
+      { spelled: "F", label: "ファ / F", accidental: "" },
+      { spelled: "G♭", label: "ソ♭ / G♭", accidental: "♭" },
+      { spelled: "G♮", label: "ソ♮ / G♮", accidental: "♮" },
+      { spelled: "A♭", label: "ラ♭ / A♭", accidental: "♭" },
+      { spelled: "B♭", label: "シ♭ / B♭", accidental: "♭" }
+    ];
+
+    const STAFF_CONFIG = {
+      treble: {
+        name: "ト音記号",
+        clef: "𝄞",
+        positionMap: {
+          "C": 5,
+          "D♭": 6,
+          "E♭": 7,
+          "E♮": 7,
+          "F": 1,
+          "G♭": 2,
+          "G♮": 2,
+          "A♭": 3,
+          "B♭": 4
+        }
+      },
+      bass: {
+        name: "ヘ音記号",
+        clef: "𝄢",
+        positionMap: {
+          "C": 3,
+          "D♭": 4,
+          "E♭": 5,
+          "E♮": 5,
+          "F": 6,
+          "G♭": 7,
+          "G♮": 7,
+          "A♭": 8,
+          "B♭": 9
+        }
+      }
+    };
+
+    const state = {
+      currentNote: null,
+      questionCount: 0
+    };
+
+    const staffElement = document.getElementById("staff");
+    const questionIndex = document.getElementById("question-index");
+    const clefLabel = document.getElementById("clef-label");
+    const status = document.getElementById("status");
+    const answerButtons = document.getElementById("answer-buttons");
+    const nextButton = document.getElementById("next-button");
+
+    const lineSpacing = 16;
+    const staffTop = 50;
+    const staffLeft = 50;
+    const staffWidth = 260;
+
+    function createSVGElement(tag, attributes = {}) {
+      const element = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      Object.entries(attributes).forEach(([key, value]) => {
+        element.setAttribute(key, value);
+      });
+      return element;
+    }
+
+    function renderStaffLines() {
+      staffElement.innerHTML = "";
+      for (let i = 0; i < 5; i += 1) {
+        const y = staffTop + i * lineSpacing;
+        const line = createSVGElement("line", {
+          x1: staffLeft,
+          x2: staffLeft + staffWidth,
+          y1: y,
+          y2: y,
+          stroke: "#111827",
+          "stroke-width": "2"
+        });
+        staffElement.appendChild(line);
+      }
+    }
+
+    function positionToY(position) {
+      return staffTop + (4 - position / 2) * lineSpacing;
+    }
+
+    function renderNote(note) {
+      renderStaffLines();
+      const config = STAFF_CONFIG[note.clef];
+      const notePosition = config.positionMap[note.spelled];
+      const y = positionToY(notePosition);
+
+      const clefText = createSVGElement("text", {
+        x: 10,
+        y: staffTop + lineSpacing * 3,
+        "font-size": "48",
+        fill: "#111827"
+      });
+      clefText.textContent = config.clef;
+      staffElement.appendChild(clefText);
+
+      const noteHead = createSVGElement("ellipse", {
+        cx: staffLeft + staffWidth / 2,
+        cy: y,
+        rx: 10,
+        ry: 7,
+        fill: "#111827"
+      });
+      staffElement.appendChild(noteHead);
+
+      const stemDirection = notePosition >= 4 ? -1 : 1;
+      const stem = createSVGElement("line", {
+        x1: staffLeft + staffWidth / 2 + 9,
+        x2: staffLeft + staffWidth / 2 + 9,
+        y1: y,
+        y2: y + stemDirection * 36,
+        stroke: "#111827",
+        "stroke-width": "2"
+      });
+      staffElement.appendChild(stem);
+
+      if (note.accidental) {
+        const accidental = createSVGElement("text", {
+          x: staffLeft + staffWidth / 2 - 30,
+          y: y + 5,
+          "font-size": "24",
+          fill: "#111827"
+        });
+        accidental.textContent = note.accidental;
+        staffElement.appendChild(accidental);
+      }
+    }
+
+    function createButtons() {
+      answerButtons.innerHTML = "";
+      NOTE_POOL.forEach((note) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = note.label;
+        button.dataset.spelled = note.spelled;
+        button.addEventListener("click", () => handleAnswer(note.spelled));
+        answerButtons.appendChild(button);
+      });
+    }
+
+    function setButtonsDisabled(disabled) {
+      answerButtons.querySelectorAll("button").forEach((button) => {
+        button.disabled = disabled;
+      });
+    }
+
+    function updateStatus(message, type) {
+      status.textContent = message;
+      status.className = "status";
+      if (type) {
+        status.classList.add(type);
+      }
+    }
+
+    function handleAnswer(spelled) {
+      if (!state.currentNote) {
+        return;
+      }
+      setButtonsDisabled(true);
+      const isCorrect = spelled === state.currentNote.spelled;
+      updateStatus(
+        isCorrect
+          ? "正解！"
+          : `不正解です。正しい答えは「${state.currentNote.spelled}」です。`,
+        isCorrect ? "correct" : "incorrect"
+      );
+    }
+
+    function pickRandomNote() {
+      const baseNote = NOTE_POOL[Math.floor(Math.random() * NOTE_POOL.length)];
+      const clef = Math.random() > 0.5 ? "treble" : "bass";
+      return { ...baseNote, clef };
+    }
+
+    function nextQuestion() {
+      state.questionCount += 1;
+      state.currentNote = pickRandomNote();
+      questionIndex.textContent = `第${state.questionCount}問`;
+      clefLabel.textContent = `${STAFF_CONFIG[state.currentNote.clef].name}（${state.currentNote.clef === "treble" ? "右手" : "左手"}）`;
+      updateStatus("", null);
+      setButtonsDisabled(false);
+      renderNote(state.currentNote);
+    }
+
+    createButtons();
+    nextButton.addEventListener("click", nextQuestion);
+    nextQuestion();
+  </script>
+</body>
+</html>
