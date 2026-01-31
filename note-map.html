@@ -198,7 +198,7 @@
         svg.appendChild(head);
 
         const isLineNote = note.step % 2 === 0;
-        const labelX = isLineNote ? labelXLeft : noteX + 18;
+        const labelX = isLineNote ? labelXLeft : labelXRight;
         const label = createSVGElement("text", {
           x: labelX,
           y: y + 4,
