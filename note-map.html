@@ -182,9 +182,8 @@
 
     function renderNotes(svg, config) {
       const noteX = staffLeft + 110;
-      const labelX = staffLeft + 140;
 
-      config.notes.forEach((note) => {
+      config.notes.forEach((note, index) => {
         const y = stepToY(note.step);
         const head = createSVGElement("ellipse", {
           cx: noteX,
@@ -195,11 +194,13 @@
         });
         svg.appendChild(head);
 
+        const isRightSide = index % 2 === 0;
         const label = createSVGElement("text", {
-          x: labelX,
+          x: isRightSide ? noteX + 26 : noteX - 26,
           y: y + 4,
           "font-size": "12",
-          fill: "#1f2937"
+          fill: "#1f2937",
+          "text-anchor": isRightSide ? "start" : "end"
         });
         label.textContent = `${note.name} / ${note.label}`;
         svg.appendChild(label);
