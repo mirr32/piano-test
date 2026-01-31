@@ -37,6 +37,16 @@
       line-height: 1.6;
     }
 
+    .subtitle a {
+      color: #1d4ed8;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .subtitle a:hover {
+      text-decoration: underline;
+    }
+
     .score-card {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -147,6 +157,9 @@
     <p class="subtitle">
       五線譜に表示された単音の音名を答えてください。調号は変イ長調（♭×4）を前提とし、
       臨時記号がある場合は譜面表記どおりに判定します（同音異名は不正解）。
+    </p>
+    <p class="subtitle">
+      <a href="note-map.html">ト音記号・ヘ音記号の音の位置一覧を見る</a>
     </p>
 
     <section class="score-card">
